@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Jai is scanning tickets at Gloucester Park</title>
+  <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 40px; }
+    h2 { color: green; }
+    #reader { width: 300px; margin-top: 20px; }
+    #result { margin-top: 20px; font-size: 1.1rem; line-height: 1.4; }
+  </style>
+</head>
+<body>
+  <h2>✅ Jai is scanning tickets at Gloucester Park</h2>
+  <div id="reader"></div>
+  <p id="result">Scan a QR code to view ticket details...</p>
+
+  <script>
+    function onScanSuccess(decodedText, decodedResult) {
+      try {
+        const ticket = JSON.parse(decodedText);
+        const result = `
+          🎟️ <strong>Ticket Scanned</strong><br>
+          <strong>Name:</strong> ${ticket.name}<br>
+          <strong>Email:</strong> ${ticket.email}<br>
+          <strong>Issued At:</strong> ${ticket.issuedAt}
+        `;
+        document.getElementById('result').innerHTML = result;
+
+// Send to Google Sheets
+fetch("https://script.google.com/macros/s/AKfycbz-2hbooQZaQkIUJ1MfHni7jygQBgRvoJFAJpKp4NnAJajSjpGCJ0B-IQhSULLp07MOIA/exec", {
+  method: "POST",
+  body: JSON.stringify(ticket),
+  headers: {
+    "Content-Type": "application/json"
+  }
+})
+.then(res => console.log("Logged to Google Sheets"))
+.catch(err => console.error("Error logging:", err));
+
+      } catch (e) {
+        document.getElementById('result').innerHTML = "⚠️ Invalid QR Code:<br>" + decodedText;
+      }
+      html5QrcodeScanner.clear();
+    }
+
+    const html5QrcodeScanner = new Html5QrcodeScanner("reader", { fps: 10, qrbox: 250 }, false);
+    html5QrcodeScanner.render(onScanSuccess);
+  </script>
+</body>
+</html>
